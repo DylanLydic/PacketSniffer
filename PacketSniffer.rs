@@ -3,12 +3,11 @@ use pnet::datalink;
 use pnet::packet::ethernet::EthernetPacket;
 use pnet::packet::Packet;
 use pnet::packet::FromPacket;
-use core::panic;
 use std::thread;
 
 fn main() {
-    let interface = datalink::interfaces();
-    //Creates empty mutable vector
+    let interfaces = datalink::interfaces();
+    // Creates empty mutable vector
     let mut handles = vec![];
 
     for interface in interfaces {
@@ -17,7 +16,7 @@ fn main() {
         });
         handles.push(handle);
     }
-    //Waits for threads to complete
+    // Waits for threads to complete
     for handle in handles {
         handle.join().unwrap();
     }
@@ -26,21 +25,22 @@ fn main() {
 fn capture_packets(interface: datalink::NetworkInterface) {
     let (_, mut rx) = match datalink::channel(&interface, Default::default()) {
         Ok(Ethernet(tx, rx)) => (tx, rx),
-        Ok(_) => panic!("Unhandled channel type: {}",&interface),
-        Err(e) => panic("An error occured when creating the datalink channel: {}",e),
+        Ok(_) => panic!("Unhandled channel type: {}", &interface),
+        Err(e) => panic!("An error occurred when creating the datalink channel: {}", e),
     };
-}
 
-println!("Start reading packet: ");
-    loop{
+    println!("Start reading packet: ");
+    loop {
         match rx.next() {
             Ok(packet) => {
                 if let Some(ethernet_packet) = EthernetPacket::new(packet) {
                     println!("New packet on {}", interface.name);
-                    println!("{} => {}: {}", 
-                        ethernet_packet.get_destination(), 
-                        ethernet_packet.get_source(), 
-                        ethernet_packet.get_ethertype());
+                    println!(
+                        "{} => {}: {}",
+                        ethernet_packet.get_destination(),
+                        ethernet_packet.get_source(),
+                        ethernet_packet.get_ethertype()
+                    );
                     let packet = ethernet_packet.packet();
                     let payload = ethernet_packet.payload();
                     let from_packet = ethernet_packet.from_packet();
@@ -48,12 +48,11 @@ println!("Start reading packet: ");
                     println!("payload: {:?}", payload);
                     println!("from_packet: {:?}", from_packet);
                     println!("---");
-                };
+                }
             }
             Err(e) => {
-                panic!("An error has occured while reading: {}", e);
+                panic!("An error has occurred while reading: {}", e);
             }
         };
-    
-
-    
+    }
+}
