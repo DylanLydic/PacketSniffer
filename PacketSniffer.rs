@@ -1,13 +1,14 @@
-use pnet::datalink::Channel::Ethernet;
-use pnet::datalink;
-use pnet::packet::ethernet::EthernetPacket;
-use pnet::packet::Packet;
-use pnet::packet::FromPacket;
+use ipnet::datalink::Channel::Ethernet;
+use ipnet::datalink;
+use ipnet::packet::ethernet::EthernetPacket;
+use ipnet::packet::Packet;
+use ipnet::packet::FromPacket;
+use core::panic;
 use std::thread;
 
 fn main() {
     let interfaces = datalink::interfaces();
-    // Creates empty mutable vector
+    // Creates empty mutable vector of data interfaces
     let mut handles = vec![];
 
     for interface in interfaces {
@@ -21,7 +22,7 @@ fn main() {
         handle.join().unwrap();
     }
 }
-
+//Extracts tx and recieves rx for ethernet frames and throws error if an unsupported channel type is transmitted
 fn capture_packets(interface: datalink::NetworkInterface) {
     let (_, mut rx) = match datalink::channel(&interface, Default::default()) {
         Ok(Ethernet(tx, rx)) => (tx, rx),
@@ -37,6 +38,7 @@ fn capture_packets(interface: datalink::NetworkInterface) {
                     println!("New packet on {}", interface.name);
                     println!(
                         "{} => {}: {}",
+                        //Pulling Packet information
                         ethernet_packet.get_destination(),
                         ethernet_packet.get_source(),
                         ethernet_packet.get_ethertype()
@@ -50,6 +52,7 @@ fn capture_packets(interface: datalink::NetworkInterface) {
                     println!("---");
                 }
             }
+            //Error Messages
             Err(e) => {
                 panic!("An error has occurred while reading: {}", e);
             }
